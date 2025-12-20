@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class LightningCommentBot:
     """Lightning-fast comment bot with pre-login and parallel processing"""
     
-    def __init__(self, cookie_strings: List[str]):
+    def __init__(self,show_info, cookie_strings: List[str]):
         """
         Initialize with multiple cookie strings
         
@@ -28,17 +28,18 @@ class LightningCommentBot:
         self.sessions: List[FacebookSession] = []
         self.ready_sessions: List[FacebookSession] = []
         self.total_profiles = 0
-        
-        self._initialize_sessions(cookie_strings)
+        self.locked_ids = 0
+        self.data = {}
+        self._initialize_sessions(show_info, cookie_strings)
         
         if not self.ready_sessions:
             raise ValueError("No valid sessions initialized")
     
-    def _initialize_sessions(self, cookie_strings: List[str]):
+    def _initialize_sessions(self,show_info, cookie_strings: List[str]):
         """Initialize all sessions in parallel"""
-        print("\n" + "="*70)
-        print("🚀 LIGHTNING COMMENT BOT - PRE-LOGIN PHASE")
-        print("="*70)
+        # print("\n" + "="*70)
+        # print("🚀 LIGHTNING COMMENT BOT - PRE-LOGIN PHASE")
+        # print("="*70)
         
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = []
@@ -60,12 +61,24 @@ class LightningCommentBot:
                         self.total_profiles += len(session.profiles)
                     
                     completed += 1
-                    print_progress(completed, total, "Logging in sessions", 
-                                 f"{completed}/{total}")
+                    self.data = {
+                        "total_profiles": self.ready_sessions,
+                        "total_ids": self.total_profiles,
+                        "loaded_pages": self.total_profiles - self.total_profiles,
+                        "locked_ids": self.locked_ids
+                    }
+
+
+                    show_info(self.data)
+                    
+
+                    # print_progress(completed, total, "Logging in sessions", 
+                    #              f"{completed}/{total}")
                 except Exception as e:
                     logger.error(f"Session failed: {e}")
                     completed += 1
-        
+
+        show_info(self.data, completed=True)
         print("="*70)
         print(f"✅ PRE-LOGIN COMPLETE: {len(self.ready_sessions)} sessions, {self.total_profiles} profiles")
         print("="*70)

@@ -1,0 +1,16 @@
+{
+  "update": {
+    "auto": true,
+    "force": false
+  },
+  "logo": {
+    "main": "SAMRAJYA",
+    "secondary": "UPDATE",
+    "font": "roman",
+    "color": {
+      "delay": 1,
+      "color": "random",
+      "random_color_each_line": false
+    }
+  }
+}

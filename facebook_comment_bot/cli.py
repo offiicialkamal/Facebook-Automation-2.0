@@ -12,18 +12,19 @@ from .utils import format_time
 class CLI:
     """Command Line Interface handler"""
     
-    def __init__(self, cookie_strings: List[str]):
+    def __init__(self, header_printer_function, cookie_strings: List[str]):
         self.bot = None
+        self.header_printer_function = header_printer_function
         self.cookie_strings = cookie_strings
         
     def run(self):
         """Run the CLI"""
-        self._print_header()
+        # self._print_header()
         
         try:
             # Initialize bot
             print("\n📥 Initializing bot...")
-            self.bot = LightningCommentBot(self.cookie_strings)
+            self.bot = LightningCommentBot(self.header_printer_function, self.cookie_strings)
             
             # Main loop
             while True:
@@ -40,22 +41,22 @@ class CLI:
             import traceback
             traceback.print_exc()
     
-    def _print_header(self):
-        """Print application header"""
-        print("\n" + "="*70)
-        print("⚡ ULTIMATE FACEBOOK COMMENT BOT")
-        print("="*70)
-        print("🔥 Features:")
-        print("  • Pre-login all sessions")
-        print("  • Lightning-fast parallel commenting")
-        print("  • Auto-fallback methods")
-        print("  • Multi-account support")
-        print("="*70)
+    # def _print_header(self):
+    #     """Print application header"""
+    #     print("\n" + "="*70)
+    #     print("⚡ ULTIMATE FACEBOOK COMMENT BOT")
+    #     print("="*70)
+    #     print("🔥 Features:")
+    #     print("  • Pre-login all sessions")
+    #     print("  • Lightning-fast parallel commenting")
+    #     print("  • Auto-fallback methods")
+    #     print("  • Multi-account support")
+    #     print("="*70)
     
     def _run_comment_session(self):
         """Run a comment session"""
         # Get user input
-        post_url, comment_text, total_comments, max_workers = self._get_user_input()
+        # post_url, comment_text, total_comments, max_workers = self._get_user_input()
         
         # Show configuration
         self._show_configuration(post_url, comment_text, total_comments, max_workers)
@@ -67,38 +68,38 @@ class CLI:
         # Run comments
         self._run_lightning_comments(post_url, comment_text, total_comments, max_workers)
     
-    def _get_user_input(self):
-        """Get user input for commenting"""
-        print("\n📝 Please provide comment details:")
+    # def _get_user_input(self):
+    #     """Get user input for commenting"""
+    #     print("\n📝 Please provide comment details:")
         
-        # Post URL
-        default_post = "https://www.facebook.com/100068994467075/posts/534891072154037/"
-        post_url = input(f"Enter post URL (default: {default_post[:50]}...): ").strip()
-        if not post_url:
-            post_url = default_post
-            print(f"Using default post URL")
+    #     # Post URL
+    #     default_post = "https://www.facebook.com/100068994467075/posts/534891072154037/"
+    #     post_url = input(f"Enter post URL (default: {default_post[:50]}...): ").strip()
+    #     if not post_url:
+    #         post_url = default_post
+    #         print(f"Using default post URL")
         
-        # Comment text
-        comment_text = input("Enter comment text: ").strip()
-        if not comment_text:
-            comment_text = "Lightning fast comment! ⚡"
-            print(f"Using default: {comment_text}")
+    #     # Comment text
+    #     comment_text = input("Enter comment text: ").strip()
+    #     if not comment_text:
+    #         comment_text = "Lightning fast comment! ⚡"
+    #         print(f"Using default: {comment_text}")
         
-        # Number of comments
-        try:
-            total_comments = int(input("Number of comments to post (default: 10): ").strip() or "10")
-        except:
-            total_comments = 10
-            print(f"Using default: {total_comments}")
+    #     # Number of comments
+    #     try:
+    #         total_comments = int(input("Number of comments to post (default: 10): ").strip() or "10")
+    #     except:
+    #         total_comments = 10
+    #         print(f"Using default: {total_comments}")
         
-        # Parallel workers
-        try:
-            max_workers = int(input("Parallel workers (default: 8): ").strip() or "8")
-        except:
-            max_workers = 8
-            print(f"Using default: {max_workers}")
+    #     # Parallel workers
+    #     try:
+    #         max_workers = int(input("Parallel workers (default: 8): ").strip() or "8")
+    #     except:
+    #         max_workers = 8
+    #         print(f"Using default: {max_workers}")
         
-        return post_url, comment_text, total_comments, max_workers
+    #     return post_url, comment_text, total_comments, max_workers
     
     def _show_configuration(self, post_url: str, comment_text: str, 
                            total_comments: int, max_workers: int):

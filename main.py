@@ -1,46 +1,211 @@
-#!/usr/bin/env python3
-"""
-Main entry point for Facebook Comment Bot
-"""
-
+import os
+import time
+import copy
 import sys
-import logging.config
-from typing import List
-
-from facebook_comment_bot.config import DEFAULT_COOKIES, LOGGING_CONFIG
+import webbrowser as wb
+sys.stdout.reconfigure(encoding="utf-8")
+from customs import show
+from global_constants import COLORS_FILE, SETTINGS_FILE, HISTORY_FILE
+from file_handlers import read_text, update_data, read_json
+from general import logo as L, Generator
+from security import security as S
+from updater import updates
 from facebook_comment_bot.cli import CLI
+# from core import batch_runner
+# from queue import Queue
+ALL_THEADS = []
+history = read_json(HISTORY_FILE)
+# result_container = Queue() # list like structure and by default its thread safe and provides put, get like mutable methods 
+result_container = {
+    "success":[],   # id_no: name, .....
+    "faliure":[],   # id_no: name, .....
+    "locked":[]     # "cookie", "cookie"....
+}
 
-def setup_logging():
-    """Setup logging configuration"""
-    logging.config.dictConfig(LOGGING_CONFIG)
+time.sleep(2)
+class comenter:
+    def __init__(self, result_container, ALL_THEADS):
+        self.result_container = result_container
+        self.logo_length = None
+        self.cookies = history["cookies"]
+        self.comment = history["comment"]
+        self.post_link = history["post_link"]
+        self.total_comments_to_do = history["total_comments_to_do"]
+        self.threads_count = history["threads_count"]
+        self.locked_till_now = history["locked_till_now"]
+        self.sucess_till_now = history["sucess_till_now"]
+        self.options = {"from_page": True,"from_user": True}
+        self.ALL_THEADS = ALL_THEADS
+        self.reserve_cookies = []
 
-def load_cookies_from_file(filename: str = "cookies.txt") -> List[str]:
-    """Load cookies from file"""
-    try:
-        with open(filename, 'r') as f:
-            cookies = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-        return cookies
-    except FileNotFoundError:
-        print(f"⚠️ Cookie file '{filename}' not found. Using default cookies.")
-        return DEFAULT_COOKIES
+    def start(self):
+        # S(REQUITRTEMENTS_FILE).check()
+        # updates().check()
+        self.clear()
+        self.ask_all_data()
+        self.clear()
+        self.logo_length = L(COLORS_FILE, SETTINGS_FILE).print_logo()
+        # self.show_info("nj")
+        self.set_post_link()
+        self.show_options()
+        choice = self.get_choice("Choice", "int")
+        if choice in [0,1,2,3,4,5,6]:self.run_choice(choice) 
+        else:
+            show(f"invalid option {choice} ")
+            time.sleep(3)
+            return self.start()
 
-def main():
-    """Main entry point"""
-    setup_logging()
-    
-    # Try to load cookies from file, otherwise use defaults
-    cookies = load_cookies_from_file()
-    
-    if not cookies:
-        print("❌ No cookies provided. Please add cookies to cookies.txt file or edit config.py")
-        print("📁 Create a file named 'cookies.txt' and add your Facebook cookie strings (one per line)")
-        sys.exit(1)
-    
-    print(f"📊 Loaded {len(cookies)} cookie strings")
-    
-    # Run CLI
-    cli = CLI(cookies)
-    cli.run()
+    def run_choice(self, choice: int):
+        # if choice in [1, 2, 3]:self.ask_all_data(choice)
+        if choice in [1, 2, 3]:self.start_thread(choice)
+        elif choice == 4:wb.open("https://github.com/offiicialkamal/Piyush-project/blob/main/readme.md")
+        elif choice == 5:wb.open("https://github.com/offiicialkamal/Piyush-project.git")
+        elif choice == 6:pass
+        elif choice == 0:sys.exit()
+        else:wb.open("https://github.com/offiicialkamal")
 
-if __name__ == "__main__":
-    main()
+    # def ask_all_data(self, choice):
+    def ask_all_data(self):
+        comment = ""
+        self.set_cookie()
+        # self.set_post_link()
+        self.set_total_comments_to_do()
+        self.set_threads_count()
+        self.set_comment()
+        # self.print_line()
+        if not (self.cookies, self.post_link, self.total_comments_to_do, self.threads_count, self.set_comment):
+            show("Some Required data is missingg Please reStart the tool and enter the all details properly")
+        
+
+    # def get_cookie_new(self, path):
+    #     for cookie in read_text(path).splitlines():
+    #         self.cookies.append(cookie)
+
+    def get_choice(self, subject: str, t=""):
+        if not t:
+            choice = input(subject) if (" " in subject) else input(f"Enter Your {subject} : ")
+            if not choice:return
+        else:
+            try:
+                choice = int(input(subject) if (" " in subject) else input(f"Enter Your {subject} : "))
+            except Exception:
+                show("Invalid 1input")
+                return self.get_choice(subject, t)
+        return choice
+
+    def clear(self):
+         os.system('cls' if os.name == 'nt' else 'clear')
+
+    def print_line(self):
+        length = self.logo_length
+        # print("<< " + "━" * length + " >>")
+        print("━" * length)
+    
+    def show_info(self, data, completed=False):
+        # print(data)
+        # return 
+        # data = {
+        #     "total_profiles": self.ready_sessions,
+        #     "total_ids": self.total_profiles,
+        #     "loaded_pages": self.total_profiles - self.total_profiles,
+        #     "locked_ids": self.locked_ids
+        # }
+        print("\033[12A", end="")
+
+        l = self.logo_length
+        print("\033[104m" + f"{'LOADED DATA' if not completed else 'LOADING PLEASE WAIT'}".center(l) + "\033[49m")
+        l+=(-8)
+        l+=(-8)
+        print()
+        print("\tLOADED SPEED               ".ljust(l//2)  + f"{self.threads_count}/Sec\t".rjust(l//2))
+        print("\tTOTAL CMTs                ".ljust(l//2)  + f"{self.total_comments_to_do}/ACC\t".rjust(l//2))
+        print("\tOVERALL IDs                ".ljust(l//2)  + f"{len(self.cookies)+len(self.locked_till_now)} IDs\t".rjust(l//2))
+        print("\tTOTAL OK IDs               ".ljust(l//2)  + f"{len(self.cookies)} IDs\t".rjust(l//2))
+        # print("\tTOTAL LOCKED IDS           ".ljust(l//2)  + f"{len(self.locked_till_now)} OK ids\t".rjust(l//2))
+        print("\tTOTAL SUCSESS CMT          ".ljust(l//2)  + f"{self.sucess_till_now} CTs\t".rjust(l//2))
+        # print("\tTOTAL LOCKED TILL NOW      ".ljust(l//2)  + f"{len(self.locked_till_now) + data['locked_ids'] or 0} IDs\t".rjust(l//2))
+        print("\tTOTAL LOADED PROFILES      ".ljust(l//2)  + f"{data.get('total_profiles')} IDs\t".rjust(l//2))
+        print("\tTOTAL LOADED IDS      ".ljust(l//2)  + f"{data.get('total_ids')} IDs\t".rjust(l//2))
+        print("\tTOTAL LOADED PAGES      ".ljust(l//2)  + f"{data.get('loaded_page')} IDs\t".rjust(l//2))
+        self.print_line()
+        
+    def show_options(self):
+        try:
+            print("   01 FROM PAGE")
+            print("   02 FROM PROFILE")
+            print("   03 FROM PAGE + PROFILE")
+            print("   04 DOCUMENTATION")
+            print("   05 SEE SOURCE CODE")
+            print("   06 SETTINGS")
+            print("   00 Exit")
+            self.print_line()
+        except Exception as e:
+            print("Unexpected Input Please choose one of the given option",  e)
+            time.sleep(3)
+            self.start()
+    def show_results(self):
+        self.print_line()
+        self.print_line()
+        total_locked_ids = len(self.result_container['locked'])
+        total_ids_with_coment_block = len(self.result_container['faliure'])
+        total_comments_sent = len(self.result_container['success'])
+        print(f'\033[42mTOTAL COMMENTS DONE {total_comments_sent}\033[49m')
+        print(f'\033[100mTOTAL COMMENTS FAILD {total_ids_with_coment_block}\033[49m')
+        print(f'\033[101mTOTAL LOCKED IDS {total_locked_ids}\033[49m')
+
+
+    ###########################################################################
+    ######################       small methods      ###########################
+
+    def set_cookie(self):
+        path = self.get_choice("cookie file path: ")
+        if not path: return
+        try:
+            cookies = []
+            new_cookie = read_text(path)
+            # print(type(new_cookie))
+            for cookie in new_cookie.splitlines():
+                # user_agent = Generator().generate()
+                # cookies.append({cookie: [user_agent]})
+                cookies.append(cookie)
+            self.cookies = cookies
+            update_data(HISTORY_FILE, "cookies", cookies)
+        except Exception as e:
+            show("File Not Found Retry")
+            print(e)
+            return self.set_cookie()
+    def set_post_link(self):
+        link = self.get_choice("post_link: ")
+        if not link: return
+        self.post_link = link
+        update_data(HISTORY_FILE, "post_link", link)
+    def set_total_comments_to_do(self):
+        number_of_coments = input("Comments Per Account: ")
+        if not number_of_coments: return
+        try:self.total_comments_to_do = int(number_of_coments)
+        except:print("invalid input");self.set_total_comments_to_do()
+        update_data(HISTORY_FILE, "total_comments_to_do", int(number_of_coments))
+    def set_threads_count(self):
+        threads_count = input("Enter Speed (1 - 10 recomended): ")
+        if not threads_count: return
+        try:self.threads_count = int(threads_count)
+        except: print("invalid input");self.set_threads_count()
+        update_data(HISTORY_FILE, "threads_count", int(threads_count))
+    def set_comment(self):
+        is_enterd= False
+        comment = ""
+        while True:
+            cmt = input("Comment: ")
+            if not cmt:break
+            is_enterd = True
+            comment += "\n" + cmt
+        if not is_enterd: return
+        self.comment = comment
+        update_data(HISTORY_FILE, "comment", comment)
+    def start_thread(self, choice):
+        print("started")
+        ## pass the alll data hear we have original work
+        cli = CLI(self.show_info, self.cookies)
+        cli.run()
+        
+comenter(result_container, ALL_THEADS).start()
