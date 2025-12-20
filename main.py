@@ -182,8 +182,8 @@ class comenter:
         if not link: return
         p_id = get_numeric_post_id(link)
         if not p_id: print("invalid post id retry boss");return self.set_post_link()
-        self.post_link = p_id
-        update_data(HISTORY_FILE, "post_link", p_id)
+        self.post_link[0] = p_id
+        update_data(HISTORY_FILE, "post_link", self.post_link)
     def set_total_comments_to_do(self):
         number_of_coments = input("Total Comments : ")
         if not number_of_coments: return
@@ -212,7 +212,7 @@ class comenter:
         ## pass the alll data hear we have original work
         data = [self.post_link, self.comment, self.total_comments_to_do, self.threads_count]
         functions = [self.set_post_link, self.show_options]
-        cli = CLI(self.show_info, self.logo_length, self.cookies, data, functions, )
+        cli = CLI(self.show_info, self.logo_length, self.cookies, data, functions)
         cli.run()
         
 comenter(result_container, ALL_THEADS).start()

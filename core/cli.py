@@ -29,6 +29,7 @@ class CLI:
             # print("\n📥 Initializing bot...")
             self.bot = LightningCommentBot(self.header_printer_function, self.cookie_strings)
             for f in self.functions:f()
+            time.sleep(1/50)
             # Main loop
             while True:
                 self._run_comment_session()
@@ -61,6 +62,7 @@ class CLI:
         # Get user input
         # post_url, comment_text, total_comments, max_workers = self._get_user_input()
         post_url, comment_text, total_comments, max_workers = self.data
+        post_url = post_url[0]
         # Show configuration
         self._show_configuration(post_url, comment_text, total_comments, max_workers)
         
