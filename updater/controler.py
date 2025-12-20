@@ -15,7 +15,7 @@ class updates:
     def __init__(self):
         self.__logo_width = 0
         self.__global_settings = None
-        self.__global_url = "https://raw.githubusercontent.com/offiicialkamal/share-storage/refs/heads/main/"
+        self.__global_url = "https://raw.githubusercontent.com/offiicialkamal/Facebook-Automation-2.0/refs/heads/main/"
 
     def check(self):
         # self.__global_settings = self.get_global_version(self.__global_url + "essensials/settings.json")
@@ -81,9 +81,9 @@ class updates:
 
     def handle_choice(self, choice):
         if choice == 1:self.update()
-        elif choice == 2:wb.open("https://github.com/offiicialkamal/share-storage/blob/main/changelogs.md")
+        elif choice == 2:wb.open("https://github.com/offiicialkamal/Facebook-Automation-2.0/blob/main/changelogs.md")
         elif choice == 3:return
-        elif choice == 4:wb.open("https://github.com/offiicialkamal/share-storage.git")
+        elif choice == 4:wb.open("https://github.com/offiicialkamal/Facebook-Automation-2.0.git")
         elif choice == 5:sys.exit()
     
     def get_global_file(self, url, silent = True):

@@ -7,10 +7,10 @@ sys.stdout.reconfigure(encoding="utf-8")
 from customs import show
 from global_constants import COLORS_FILE, SETTINGS_FILE, HISTORY_FILE
 from file_handlers import read_text, update_data, read_json
-from general import logo as L, Generator
+from general import logo as L, Generator, get_numeric_post_id
 from security import security as S
 from updater import updates
-from facebook_comment_bot.cli import CLI
+from core.cli import CLI
 # from core import batch_runner
 # from queue import Queue
 ALL_THEADS = []
@@ -37,6 +37,7 @@ class comenter:
         self.options = {"from_page": True,"from_user": True}
         self.ALL_THEADS = ALL_THEADS
         self.reserve_cookies = []
+        self.is_first=False
 
     def start(self):
         # S(REQUITRTEMENTS_FILE).check()
@@ -45,21 +46,20 @@ class comenter:
         self.ask_all_data()
         self.clear()
         self.logo_length = L(COLORS_FILE, SETTINGS_FILE).print_logo()
-        # self.show_info("nj")
-        self.set_post_link()
-        self.show_options()
-        choice = self.get_choice("Choice", "int")
-        if choice in [0,1,2,3,4,5,6]:self.run_choice(choice) 
-        else:
-            show(f"invalid option {choice} ")
-            time.sleep(3)
-            return self.start()
+        # # self.show_info("nj")
+        # choice = self.get_choice("Choice", "int")
+        # if choice in [0,1,2,3,4,5,6]:self.run_choice(choice) 
+        # else:
+        #     show(f"invalid option {choice} ")
+        #     time.sleep(3)
+        #     return self.start()
+        self.start_thread()
 
     def run_choice(self, choice: int):
         # if choice in [1, 2, 3]:self.ask_all_data(choice)
-        if choice in [1, 2, 3]:self.start_thread(choice)
-        elif choice == 4:wb.open("https://github.com/offiicialkamal/Piyush-project/blob/main/readme.md")
-        elif choice == 5:wb.open("https://github.com/offiicialkamal/Piyush-project.git")
+        if choice in [1, 2, 3]:self.start_thread()
+        elif choice == 4:wb.open("https://github.com/offiicialkamal/Facebook-Automation-2.0/blob/main/readme.md")
+        elif choice == 5:wb.open("https://github.com/offiicialkamal/Facebook-Automation-2.0.git")
         elif choice == 6:pass
         elif choice == 0:sys.exit()
         else:wb.open("https://github.com/offiicialkamal")
@@ -101,6 +101,8 @@ class comenter:
         # print("<< " + "━" * length + " >>")
         print("━" * length)
     
+    
+    is_first=False
     def show_info(self, data, completed=False):
         # print(data)
         # return 
@@ -110,23 +112,24 @@ class comenter:
         #     "loaded_pages": self.total_profiles - self.total_profiles,
         #     "locked_ids": self.locked_ids
         # }
-        print("\033[12A", end="")
+        if self.is_first:
+            print("\033[11A", end="")
+        self.is_first = True
 
         l = self.logo_length
-        print("\033[104m" + f"{'LOADED DATA' if not completed else 'LOADING PLEASE WAIT'}".center(l) + "\033[49m")
+        print("\033[104m" + f"{'LOADED DATA' if completed else 'LOADING PLEASE WAIT'}".center(l) + "\033[49m")
+        self.print_line()
         l+=(-8)
         l+=(-8)
         print()
         print("\tLOADED SPEED               ".ljust(l//2)  + f"{self.threads_count}/Sec\t".rjust(l//2))
         print("\tTOTAL CMTs                ".ljust(l//2)  + f"{self.total_comments_to_do}/ACC\t".rjust(l//2))
         print("\tOVERALL IDs                ".ljust(l//2)  + f"{len(self.cookies)+len(self.locked_till_now)} IDs\t".rjust(l//2))
-        print("\tTOTAL OK IDs               ".ljust(l//2)  + f"{len(self.cookies)} IDs\t".rjust(l//2))
-        # print("\tTOTAL LOCKED IDS           ".ljust(l//2)  + f"{len(self.locked_till_now)} OK ids\t".rjust(l//2))
-        print("\tTOTAL SUCSESS CMT          ".ljust(l//2)  + f"{self.sucess_till_now} CTs\t".rjust(l//2))
-        # print("\tTOTAL LOCKED TILL NOW      ".ljust(l//2)  + f"{len(self.locked_till_now) + data['locked_ids'] or 0} IDs\t".rjust(l//2))
-        print("\tTOTAL LOADED PROFILES      ".ljust(l//2)  + f"{data.get('total_profiles')} IDs\t".rjust(l//2))
         print("\tTOTAL LOADED IDS      ".ljust(l//2)  + f"{data.get('total_ids')} IDs\t".rjust(l//2))
-        print("\tTOTAL LOADED PAGES      ".ljust(l//2)  + f"{data.get('loaded_page')} IDs\t".rjust(l//2))
+        print("\tTOTAL LOADED PAGES      ".ljust(l//2)  + f"{data.get('total_ids')-data.get('total_profiles')} IDs\t".rjust(l//2))
+        print("\tTOTAL LOADED PROFILES      ".ljust(l//2)  + f"{data.get('total_profiles')} IDs\t".rjust(l//2))
+        print("\tTOTAL LOCKED TILL NOW      ".ljust(l//2)  + f"{len(self.locked_till_now) + data['locked_ids'] or 0} IDs\t".rjust(l//2))
+
         self.print_line()
         
     def show_options(self):
@@ -177,10 +180,12 @@ class comenter:
     def set_post_link(self):
         link = self.get_choice("post_link: ")
         if not link: return
-        self.post_link = link
-        update_data(HISTORY_FILE, "post_link", link)
+        p_id = get_numeric_post_id(link)
+        if not p_id: print("invalid post id retry boss");return self.set_post_link()
+        self.post_link = p_id
+        update_data(HISTORY_FILE, "post_link", p_id)
     def set_total_comments_to_do(self):
-        number_of_coments = input("Comments Per Account: ")
+        number_of_coments = input("Total Comments : ")
         if not number_of_coments: return
         try:self.total_comments_to_do = int(number_of_coments)
         except:print("invalid input");self.set_total_comments_to_do()
@@ -202,10 +207,12 @@ class comenter:
         if not is_enterd: return
         self.comment = comment
         update_data(HISTORY_FILE, "comment", comment)
-    def start_thread(self, choice):
-        print("started")
+    def start_thread(self):
+        # print("started")
         ## pass the alll data hear we have original work
-        cli = CLI(self.show_info, self.cookies)
+        data = [self.post_link, self.comment, self.total_comments_to_do, self.threads_count]
+        functions = [self.set_post_link, self.show_options]
+        cli = CLI(self.show_info, self.logo_length, self.cookies, data, functions, )
         cli.run()
         
 comenter(result_container, ALL_THEADS).start()

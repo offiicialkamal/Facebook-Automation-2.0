@@ -158,7 +158,7 @@ class FacebookSession:
         Returns: (success, comment_id/error, method, elapsed_time)
         """
         start_time = time.time()
-        
+        error = "Not specified"
         # Use main profile if not specified
         if not use_profile:
             use_profile = self.profiles[0]

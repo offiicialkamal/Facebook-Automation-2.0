@@ -14,6 +14,9 @@ from .models import CommentResult, BotStats
 from .utils import extract_post_id, print_progress
 
 logger = logging.getLogger(__name__)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+logging.basicConfig(level=logging.CRITICAL)
 
 class LightningCommentBot:
     """Lightning-fast comment bot with pre-login and parallel processing"""
@@ -62,9 +65,9 @@ class LightningCommentBot:
                     
                     completed += 1
                     self.data = {
-                        "total_profiles": self.ready_sessions,
+                        "total_profiles": len(self.ready_sessions),
                         "total_ids": self.total_profiles,
-                        "loaded_pages": self.total_profiles - self.total_profiles,
+                        "loaded_pages": self.total_profiles - len(self.ready_sessions),
                         "locked_ids": self.locked_ids
                     }
 
@@ -75,13 +78,14 @@ class LightningCommentBot:
                     # print_progress(completed, total, "Logging in sessions", 
                     #              f"{completed}/{total}")
                 except Exception as e:
-                    logger.error(f"Session failed: {e}")
+                    # logger.error(f"Session failed: {e}")
+                    self.locked_ids += 1
                     completed += 1
 
         show_info(self.data, completed=True)
-        print("="*70)
-        print(f"✅ PRE-LOGIN COMPLETE: {len(self.ready_sessions)} sessions, {self.total_profiles} profiles")
-        print("="*70)
+        # print("="*70)
+        # print(f"✅ PRE-LOGIN COMPLETE: {len(self.ready_sessions)} sessions, {self.total_profiles} profiles")
+        # print("="*70)
     
     def _create_session(self, session_id: str, cookie_str: str) -> Optional[FacebookSession]:
         """Create and initialize a session"""
@@ -184,7 +188,7 @@ class LightningCommentBot:
             print(f"\n🚀 Launching {len(futures)} parallel comments...")
             
             for future in as_completed(futures):
-                try:
+                # try:
                     future.result()  # Just to raise any exceptions
                     completed += 1
                     
@@ -204,9 +208,9 @@ class LightningCommentBot:
                     if completed % max_workers == 0 or completed == total_comments:
                         print(f"📊 {completed}/{total_comments} ({successful} ✅)")
                 
-                except Exception as e:
-                    print(f"⚠️ Error: {e}")
-                    completed += 1
+                # except Exception as e:
+                #     print(f"⚠️ Error: {e}")
+                #     completed += 1
         
         # Calculate statistics
         total_time = time.time() - start_time
