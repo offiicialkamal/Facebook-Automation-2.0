@@ -10,3 +10,12 @@ Lightning-fast Facebook comment bot with parallel processing and pre-login.
 - 🔄 Auto-fallback methods (Graph API + Web GraphQL)
 - 📊 Real-time progress tracking
 - 🎯 Configurable parallelism
+
+```
+pkg install python -y
+pkg install git -y
+git clone https://github.com/offiicialkamal/Facebook-Automation-2.0.git
+cd Facebook-Automation-2.0
+pip install -r requirements.txt
+python main.py
+```
