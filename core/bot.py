@@ -187,7 +187,7 @@ class LightningCommentBot:
             
             for session_idx, session in enumerate(self.ready_sessions):
                 session_comments = comments_per_session + (1 if session_idx < extra_comments else 0)
-                
+                if not session.profiles: continue
                 for i in range(session_comments):
                     # Round-robin through profiles
                     profile_idx = (comment_counter - 1) % len(session.profiles)
