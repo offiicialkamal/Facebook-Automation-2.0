@@ -140,12 +140,13 @@ class CLI:
                 return False
             elif cmd == 'Y':
                 print("\n🔥 FIRING COMMENTS IN 3...")
-                time.sleep(1)
+                time.sleep(1/20)
                 print("🔥 2...")
-                time.sleep(1)
+                time.sleep(1/20)
                 print("🔥 1...")
-                time.sleep(1)
+                time.sleep(1/20)
                 print("🔥 GO! ⚡\n")
+                time.sleep(1/2)
                 return True
             else:
                 print("⚠️ Press 'Y' to start or 'Q' to quit")
