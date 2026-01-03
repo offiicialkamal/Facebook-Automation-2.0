@@ -27,7 +27,8 @@ class CLI:
         # try:
             # Initialize bot
             # print("\n📥 Initializing bot...")
-            self.bot = LightningCommentBot(self.header_printer_function, self.cookie_strings)
+            use_ids = self.data[-1]
+            self.bot = LightningCommentBot(self.header_printer_function, self.cookie_strings, use_ids)
             for f in self.functions:f()
             time.sleep(1/50)
             # Main loop
@@ -61,17 +62,17 @@ class CLI:
         """Run a comment session"""
         # Get user input
         # post_url, comment_text, total_comments, max_workers = self._get_user_input()
-        post_url, comment_text, total_comments, max_workers = self.data
+        post_url, comment_text, total_comments, max_workers, use_ids = self.data
         post_url = post_url[0]
         # Show configuration
-        self._show_configuration(post_url, comment_text, total_comments, max_workers)
+        self._show_configuration(post_url, comment_text, total_comments, use_ids, max_workers)
         
         # Wait for start command
         if not self._wait_for_start():
             return
         
         # Run comments
-        self._run_lightning_comments(post_url, comment_text, total_comments, max_workers)
+        self._run_lightning_comments(post_url, comment_text, total_comments, use_ids, max_workers)
     
     # def _get_user_input(self):
     #     """Get user input for commenting"""
@@ -106,7 +107,7 @@ class CLI:
         
     #     return post_url, comment_text, total_comments, max_workers
     
-    def _show_configuration(self, post_url: str, comment_text: str, total_comments: int, max_workers: int):
+    def _show_configuration(self, post_url: str, comment_text: str, total_comments: int, use_ids: bool,  max_workers: int):
         """Show configuration summary"""
         print("\n" + "━"*self.logo_length)
         print("🎯 CONFIGURATION SUMMARY".center(self.logo_length))
@@ -114,6 +115,7 @@ class CLI:
         print(f"Post URL: {post_url[:80]}...")
         print(f"Comment: {comment_text}")
         print(f"Target comments: {total_comments}")
+        print(f"Use Ids Also: {use_ids}")
         print(f"Parallel workers: {max_workers}")
         
         # Show bot status
@@ -148,7 +150,7 @@ class CLI:
             else:
                 print("⚠️ Press 'Y' to start or 'Q' to quit")
     
-    def _run_lightning_comments(self, post_url: str, comment_text: str, total_comments: int, max_workers: int):
+    def _run_lightning_comments(self, post_url: str, comment_text: str, total_comments: int, use_ids: bool, max_workers: int):
         """Run lightning-fast commenting"""
         overall_start = time.time()
         

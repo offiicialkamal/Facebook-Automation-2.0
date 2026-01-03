@@ -21,13 +21,14 @@ logging.basicConfig(level=logging.CRITICAL)
 class LightningCommentBot:
     """Lightning-fast comment bot with pre-login and parallel processing"""
     
-    def __init__(self,show_info, cookie_strings: List[str]):
+    def __init__(self,show_info, cookie_strings: List[str], use_ids: bool):
         """
         Initialize with multiple cookie strings
         
         Args:
             cookie_strings: List of cookie strings for different accounts
         """
+        self.use_ids = use_ids
         self.sessions: List[FacebookSession] = []
         self.ready_sessions: List[FacebookSession] = []
         self.total_profiles = 0
@@ -38,7 +39,7 @@ class LightningCommentBot:
         if not self.ready_sessions:
             raise ValueError("No valid sessions initialized")
     
-    def _initialize_sessions(self,show_info, cookie_strings: List[str]):
+    def _initialize_sessions(self, show_info, cookie_strings: List[str]):
         """Initialize all sessions in parallel"""
         # print("\n" + "="*70)
         # print("🚀 LIGHTNING COMMENT BOT - PRE-LOGIN PHASE")
@@ -54,6 +55,8 @@ class LightningCommentBot:
             
             # Initialize sessions with progress
             completed = 0
+            pages = 0
+            profiles = 0
             total = len(futures)
             
             for future in as_completed(futures):
@@ -62,12 +65,35 @@ class LightningCommentBot:
                     if session:
                         self.ready_sessions.append(session)
                         self.total_profiles += len(session.profiles)
+                        pages += session.pages
+                        profiles += session.ids # always returns 1
+                        
+                        # if self.use_ids:
+                        #     self.ready_sessions.append(session)
+                        #     self.total_profiles += len(session.profiles)
+                        #     pages += 1
+                        #     profiles += 1
+                        #     # print("page or profile loaded")
+                        # elif not (session.cookies.get('c_user') == session.cookies.get('i_user')):
+                        #     print(session.cookies.get('c_user'))
+                        #     print()
+                        #     print(session.cookies.get('i_user'))
+                        #     print()
+                        #     print()
+                        #     print(session.cookies)
+                        #     time.sleep(3)
+                        #     self.ready_sessions.append(session)
+                        #     self.total_profiles += len(session.profiles)
+                        #     pages +=1
+                        #     # print("page loaded ")
+                        
                     
                     completed += 1
                     self.data = {
                         "total_profiles": len(self.ready_sessions),
                         "total_ids": self.total_profiles,
-                        "loaded_pages": self.total_profiles - len(self.ready_sessions),
+                        "loaded_profiles": profiles,
+                        "loaded_pages": pages,
                         "locked_ids": self.locked_ids
                     }
 
@@ -90,7 +116,7 @@ class LightningCommentBot:
     def _create_session(self, session_id: str, cookie_str: str) -> Optional[FacebookSession]:
         """Create and initialize a session"""
         try:
-            session = FacebookSession(session_id, cookie_str)
+            session = FacebookSession(session_id, cookie_str, self.use_ids)
             if session.initialize():
                 return session
         except Exception as e:
@@ -118,8 +144,7 @@ class LightningCommentBot:
         
         return status
     
-    def rapid_comments(self, post_url: str, comment_text: str, 
-                       total_comments: int = 10, max_workers: int = 10) -> Dict:
+    def rapid_comments(self, post_url: str, comment_text: str, total_comments: int = 10, max_workers: int = 10) -> Dict:
         """
         Lightning-fast parallel commenting
         
@@ -167,7 +192,8 @@ class LightningCommentBot:
                     # Round-robin through profiles
                     profile_idx = (comment_counter - 1) % len(session.profiles)
                     profile = session.profiles[profile_idx]
-                    
+
+                    # print(session.cookies)
                     future = executor.submit(
                         self._comment_worker,
                         session,

@@ -28,6 +28,7 @@ class comenter:
         self.result_container = result_container
         self.logo_length = None
         self.cookies = history["cookies"]
+        self.use_ids = True  # used for the choice ( True = pages + ids , False = pages only )
         self.comment = history["comment"]
         self.post_link = history["post_link"]
         self.total_comments_to_do = history["total_comments_to_do"]
@@ -68,6 +69,7 @@ class comenter:
     def ask_all_data(self):
         comment = ""
         self.set_cookie()
+        self.set_use_pages()
         # self.set_post_link()
         self.set_total_comments_to_do()
         self.set_threads_count()
@@ -104,6 +106,7 @@ class comenter:
     
     is_first=False
     def show_info(self, data, completed=False):
+        # time.sleep(5)
         # print(data)
         # return 
         # data = {
@@ -113,22 +116,33 @@ class comenter:
         #     "locked_ids": self.locked_ids
         # }
         if self.is_first:
-            print("\033[11A", end="")
+            print("\033[12A", end="")
         self.is_first = True
-
+          
         l = self.logo_length
-        print("\033[104m" + f"{'LOADED DATA' if completed else 'LOADING PLEASE WAIT'}".center(l) + "\033[49m")
+        percent = (data.get('total_profiles') / (len(self.cookies)+len(self.locked_till_now))) * 100
+        no_of_colums_to_color = int(l * percent // 100)
+        header = f"""{'LOADED ALL IDS' if completed else f'LOADING PLEASE WAIT {percent:.2f}%'}""".center(l)
+        # try:
+        #     print(no_of_colums_to_color)
+        #     print(header[:no_of_colums_to_color])
+        # except Exception as e:print(e)
+        
+        # header = "\033[104m" + f"{'LOADED DATA' if completed else 'LOADING PLEASE WAIT'}".center(l) + "\033[49m"
+        
+        print("\033[104m" + header[:no_of_colums_to_color:] + "\033[49m" + header[no_of_colums_to_color::])
         self.print_line()
         l+=(-8)
         l+=(-8)
         print()
-        print("\tLOADED SPEED               ".ljust(l//2)  + f"{self.threads_count}/Sec\t".rjust(l//2))
-        print("\tTOTAL CMTs                ".ljust(l//2)  + f"{self.total_comments_to_do}/ACC\t".rjust(l//2))
-        print("\tOVERALL IDs                ".ljust(l//2)  + f"{len(self.cookies)+len(self.locked_till_now)} IDs\t".rjust(l//2))
-        print("\tTOTAL LOADED IDS      ".ljust(l//2)  + f"{data.get('total_ids')} IDs\t".rjust(l//2))
-        print("\tTOTAL LOADED PAGES      ".ljust(l//2)  + f"{data.get('total_ids')-data.get('total_profiles')} IDs\t".rjust(l//2))
-        print("\tTOTAL LOADED PROFILES      ".ljust(l//2)  + f"{data.get('total_profiles')} IDs\t".rjust(l//2))
-        print("\tTOTAL LOCKED TILL NOW      ".ljust(l//2)  + f"{len(self.locked_till_now) + data['locked_ids'] or 0} IDs\t".rjust(l//2))
+        print("\tLOADED SPEED               ".ljust(l//2)  + f"{self.threads_count}\t".rjust(l//2))
+        print("\tTOTAL CMTs                ".ljust(l//2)  + f"{self.total_comments_to_do}\t".rjust(l//2))
+        print("\tOVERALL IDs                ".ljust(l//2)  + f"{len(self.cookies)+len(self.locked_till_now)}\t".rjust(l//2))
+        print("\tTOTAL LOADED IDS      ".ljust(l//2)  + f"{data.get('total_ids')}\t".rjust(l//2))
+        print("\tTOTAL LOADED PAGES      ".ljust(l//2)  + f"{data.get('loaded_pages')}\t".rjust(l//2))
+        print("\tTOTAL LOADED PROFILES (main)      ".ljust(l//2)  + f"{data.get('loaded_profiles')}\t".rjust(l//2))
+        print("\tLOCKED IDS           ".ljust(l//2) +  f"{data.get('locked_ids')}\t".rjust(l//2))
+        print("\tOVER ALL LOCKED      ".ljust(l//2)  + f"{len(self.locked_till_now) + data['locked_ids'] or 0}\t".rjust(l//2))
 
         self.print_line()
         
@@ -207,10 +221,14 @@ class comenter:
         if not is_enterd: return
         self.comment = comment
         update_data(HISTORY_FILE, "comment", comment)
+    def set_use_pages(self):
+        self.use_ids = False if input("Use ids also For Comments (Y/N) :") == "N" else True
     def start_thread(self):
         # print("started")
         ## pass the alll data hear we have original work
-        data = [self.post_link, self.comment, self.total_comments_to_do, self.threads_count]
+        # print(self.use_ids)
+        time.sleep(5)
+        data = [self.post_link, self.comment, self.total_comments_to_do, self.threads_count, self.use_ids]
         functions = [self.set_post_link, self.show_options]
         cli = CLI(self.show_info, self.logo_length, self.cookies, data, functions)
         cli.run()

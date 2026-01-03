@@ -17,10 +17,11 @@ logger = logging.getLogger(__name__)
 class FacebookSession:
     """Represents a single authenticated Facebook session"""
     
-    def __init__(self, session_id: str, cookie_string: str):
+    def __init__(self, session_id: str, cookie_string: str, use_ids):
         self.session_id = session_id
         self.cookies = parse_cookies(cookie_string)
         self.user_id = self.cookies.get('c_user')
+        self.use_ids = use_ids
         
         if not self.user_id:
             raise ValueError("No c_user found in cookies")
@@ -34,6 +35,8 @@ class FacebookSession:
         self.eaag_token = None
         self.page_tokens = {}
         self.profiles: List[Profile] = []
+        self.pages = 0
+        self.ids = 0
         
         # Status
         self.initialized = False
@@ -118,16 +121,19 @@ class FacebookSession:
     def _prepare_profiles(self):
         """Prepare list of available profiles"""
         # Add main user
-        self.profiles.append(Profile(
-            id=self.user_id,
-            name=f"User_{self.user_id[:6]}",
-            type="user",
-            token_type="EAAG" if self.eaag_token else "Web",
-            access_token=self.eaag_token if self.eaag_token else None
-        ))
-        
+        if self.use_ids:
+            self.ids += 1
+            self.profiles.append(Profile(
+                id=self.user_id,
+                name=f"User_{self.user_id[:6]}",
+                type="user",
+                token_type="EAAG" if self.eaag_token else "Web",
+                access_token=self.eaag_token if self.eaag_token else None
+            ))
+            
         # Add pages
         for page_id, page_info in self.page_tokens.items():
+            self.pages += 1
             self.profiles.append(Profile(
                 id=page_id,
                 name=page_info["name"],
